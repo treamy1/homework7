@@ -1,0 +1,88 @@
+
+@startuml Scenario 1 - Authenticate and Report Pothole
+!pragma layout smetana
+
+title Scenario 1 - Authenticate and Report Pothole
+'predefined information
+skin rose
+participant Citizen
+entity "Web Server"
+database Database
+
+' verify authenticated user
+Citizen -> "Web Server": GET /authenticatedUser{id, password}
+"Web Server" -> Database: Query for autheticatedUser
+Database -> "Web Server": Response
+' if authenticated, redirect Citizen to the /potholes/new and
+' allow users to input location and severity
+alt authenticatedUser
+' if authenticated, redirect Citizen to the /potholes/new and
+"Web Server" -> Citizen: redirect to /potholes/new
+Citizen --> "Web Server": GET /potholes/new{location, severity}
+"Web Server" -> Database: Upload new pothole data
+else notAuthenticatedUser
+' if not authenticated, display authentication failure message
+"Web Server" -> Citizen: display authentication failure message
+end
+@enduml
+
+@startuml Scenario 2 - Ask Question
+!pragma layout smetana
+title Scenario 2 - Ask Question
+'predefined information
+skin rose
+participant User
+entity frontend
+entity backend
+entity "Ad Server"
+database Database
+
+' User enters question, and sends to backend
+User -> frontend: Enters question{what should I do to.., what should I do if }
+frontend-> backend: Send question
+
+' Backend searches for question in database
+alt Question found in database
+    backend -> frontend: Return answer
+    frontend-> "Ad Server": Request new ad
+    "Ad Server" -> frontend: Send ad
+    frontend -> User: Display answer with ad
+    ' Question not found in database
+else Question not found in database
+    backend -> Database: Save new question
+    backend -> frontend: Return "Hmmm... Let me think about it. Ask me again in 24 hours."
+    frontend-> User: Display message
+end
+
+@enduml
+
+@startuml Scenario 3 - Get Oldest Unanswered Question
+!pragma layout smetana
+
+title Scenario 3 - Get Oldest Unanswered Question
+'predefined information
+skin rose
+participant Editor
+entity "frontend"
+entity "backend"
+database Database
+
+' get question from database
+Editor -> "frontend": Request unanswered question
+"frontend"-> "backend": Query oldest unanswered question
+"backend" -> Database: Search for oldest unanswered question
+' return oldest unanswered question
+Database --> "backend": Oldest unanswered question found
+"backend"--> "frontend": Oldest unanswered question
+"frontend" -> Editor: Display input form for official answer
+' save official answer
+Editor -> "frontend": Provide official answer
+"frontend"-> "backend": Save official answer
+"backend" -> Database: Update database with official answer
+' return confirmation message(not required)
+"backend" --> "frontend": Answer saved successfully
+"frontend" --> Editor: Confirmation message
+
+@enduml
+
+
